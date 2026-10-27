@@ -1,0 +1,49 @@
+name: mint-diary
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mint_diary}
+      MYSQL_USER: ${MYSQL_USER:-mint_diary}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Run start.ps1 to create .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run start.ps1 to create .env}
+      TZ: ${APP_TIME_ZONE:-Asia/Singapore}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root --password=\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-mint_diary}?useUnicode=true&characterEncoding=utf8&serverTimezone=${APP_TIME_ZONE:-Asia/Singapore}&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USERNAME: ${MYSQL_USER:-mint_diary}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      APP_TIME_ZONE: ${APP_TIME_ZONE:-Asia/Singapore}
+      APP_ALLOWED_ORIGINS: http://localhost:${APP_PORT:-5173},http://127.0.0.1:${APP_PORT:-5173}
+      APP_UPLOAD_DIR: /data/images
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70.0 -Dfile.encoding=UTF-8
+    volumes:
+      - uploads:/data/images
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${APP_PORT:-5173}:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  uploads:
