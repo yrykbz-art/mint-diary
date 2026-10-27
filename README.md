@@ -56,6 +56,13 @@ flowchart LR
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)（使用 Linux 容器）
 - Windows 用户可直接使用仓库内的 PowerShell 脚本；macOS / Linux 使用下方的手动命令
 
+### 获取代码
+
+```bash
+git clone https://github.com/yrykbz-art/mint-diary.git
+cd mint-diary
+```
+
 ### Windows：一键启动
 
 先启动 Docker Desktop，然后在项目目录打开 PowerShell：
